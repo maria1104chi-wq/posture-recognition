@@ -1,0 +1,66 @@
+# .gitignore for plastic-granule-ai
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Node
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Models and Data
+models/*.pt
+models/*.onnx
+models/*.engine
+data/images/
+data/labels/
+
+# Captures and Logs
+captures/*.jpg
+captures/*.png
+logs/*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docker
+*.pid
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# ML flow
+mlruns/
