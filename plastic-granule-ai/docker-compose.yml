@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: plastic-granule-backend
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CAMERA_0_RTSP=${CAMERA_0_RTSP:-rtsp://admin:password@192.168.1.10:554/stream1}
+      - CAMERA_1_RTSP=${CAMERA_1_RTSP:-rtsp://admin:password@192.168.1.11:554/stream1}
+      - CAMERA_2_RTSP=${CAMERA_2_RTSP:-rtsp://admin:password@192.168.1.12:554/stream1}
+      - CAMERA_3_RTSP=${CAMERA_3_RTSP:-rtsp://admin:password@192.168.1.13:554/stream1}
+      - CAMERA_4_RTSP=${CAMERA_4_RTSP:-rtsp://admin:password@192.168.1.14:554/stream1}
+      - CAMERA_5_RTSP=${CAMERA_5_RTSP:-rtsp://admin:password@192.168.1.15:554/stream1}
+      - CAMERA_6_RTSP=${CAMERA_6_RTSP:-rtsp://admin:password@192.168.1.16:554/stream1}
+      - CAMERA_7_RTSP=${CAMERA_7_RTSP:-rtsp://admin:password@192.168.1.17:554/stream1}
+      - MODEL_PATH=/app/models/best.pt
+      - MODEL_CONFIDENCE=${MODEL_CONFIDENCE:-0.5}
+      - MODEL_IOU=${MODEL_IOU:-0.45}
+      - INFERENCE_INTERVAL=${INFERENCE_INTERVAL:-5}
+      - MAX_FPS=${MAX_FPS:-15}
+      - SEDENTARY_THRESHOLD=${SEDENTARY_THRESHOLD:-300}
+      - SLEEP_THRESHOLD=${SLEEP_THRESHOLD:-600}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - USE_GPU=${USE_GPU:-true}
+      - GPU_ID=${GPU_ID:-0}
+      - CAPTURE_DIR=/app/captures
+      - LOG_DIR=/app/logs
+    volumes:
+      - ./models:/app/models:ro
+      - ./captures:/app/captures
+      - ./logs:/app/logs
+    ports:
+      - "${API_PORT:-8000}:8000"
+    networks:
+      - plastic-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: plastic-granule-frontend
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    networks:
+      - plastic-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+networks:
+  plastic-net:
+    driver: bridge
+
+volumes:
+  models:
+  captures:
+  logs:
